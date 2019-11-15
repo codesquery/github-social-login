@@ -3,18 +3,16 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import passport from 'passport';
 import path from 'path';
-import { Strategy } from 'passport-facebook';
+import { Strategy } from 'passport-github2';
 
 let session = require('express-session');
 
 
 /** passport setup */
 passport.use(new Strategy({
-    clientID: 'facebook-app-id',
-    clientSecret: 'facebook-app-secret',
-    callbackURL: "http://localhost:3000/auth/facebook/callback",
-    profileFields: ['id', 'displayName','email'],
-    enableProof: true
+    clientID: '4fb763621db9d2a88652',
+    clientSecret: '16e6728d73ca1f81cbaad89f964606fa1cf91e56',
+    callbackURL: "http://localhost:3000/auth/github/callback"
   },
   function(accessToken, refreshToken, user, cb) {
     return cb(null,user);
@@ -53,13 +51,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(__dirname + '/public'));
 
-mongoose.Promise = global.Promise;
-
-mongoose.connect('mongodb://localhost/social_login')
-  .then(() =>  console.log('connection successful'))
-  .catch((err) => console.error(err));
-
-
 const isAuthenticated = async (req, res, next) => {
     if (req.isAuthenticated()) { return next(); }
     res.redirect('/');
@@ -73,9 +64,9 @@ app.get('/account', isAuthenticated, (req, res) => {
     res.render('success', { 'user' : req.user._json});
 });
 
-app.get('/auth/facebook', passport.authenticate('facebook', {scope:"email"}));
+app.get('/auth/github', passport.authenticate('github', { scope: [ 'user:email' ] }));
 
-app.get('/auth/facebook/callback', passport.authenticate('facebook', { successRedirect: '/account', failureRedirect: '/' }));
+app.get('/auth/github/callback', passport.authenticate('github', { successRedirect: '/account', failureRedirect: '/' }));
 
 app.use('/auth/logout', (req, res) => {
     req.logout();
